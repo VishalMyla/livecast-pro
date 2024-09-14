@@ -2,8 +2,7 @@
 
 import { Banner } from "@/components/Banner";
 import Navbar from "@/components/Navbar";
-
-
+import Hero from "@/components/Hero";
 
 
 export default function Home() {
@@ -11,6 +10,7 @@ export default function Home() {
  <div >
   <Banner/>
   <Navbar/>
+  <Hero/>
  </div>
 );
 }
