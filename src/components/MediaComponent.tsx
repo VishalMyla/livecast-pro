@@ -1,12 +1,13 @@
 // components/MediaComponent.tsx
 "use client"; // Ensure this is a client-side component
 
-import { useState } from "react";
+import { useState , useRef} from "react";
 
 const MediaComponent = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const getMedia = async () => {
     try {
@@ -52,8 +53,36 @@ const MediaComponent = () => {
     }
   };
 
+
+  const sendMedia = () => {
+    if (stream) {
+      // Initialize MediaRecorder with the media stream
+      const mediaRecorder = new MediaRecorder(stream, {
+        audioBitsPerSecond: 128000,
+        videoBitsPerSecond: 2500000,
+        mimeType: "video/webm", // Specify the format
+      });
+
+      // Save reference to media recorder for further control
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          console.log('Binary Stream Available', event.data);
+          // socket.emit('binarystream', event.data);  // Emit the binary data to the server
+        }
+      };
+
+      mediaRecorder.start(1000);  // Collect data in intervals (e.g., every 1 second)
+      setMessage("Recording started and binary stream is being sent");
+    } else {
+      setMessage("No media to send");
+    }
+  };
+
+
   return (
-    <div>
+    <div className="bg-black text-white">
       <button onClick={getMedia} style={{ marginRight: "10px" }}>
         Get Media
       </button>
@@ -66,6 +95,9 @@ const MediaComponent = () => {
       </button>
       <button onClick={() => toggleAudio(false)}>
         Disable Audio
+      </button>
+      <button onClick={sendMedia} style={{ marginRight: "10px" }}>
+        Send Media
       </button>
 
       {/* Conditionally show the video if a stream exists */}
