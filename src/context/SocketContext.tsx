@@ -1,3 +1,4 @@
+"use client"
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
@@ -11,7 +12,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Connect to the socket server at port 8484
     const socketIo = io('ws://localhost:8484');
-
+    console.log("sockect is connected pudongi")
     setSocket(socketIo);
 
     // Cleanup when the component unmounts

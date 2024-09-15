@@ -2,13 +2,16 @@
 "use client"; // Ensure this is a client-side component
 
 import { useState , useRef} from "react";
+import { useSocket } from "@/context/SocketContext";
+
+
 
 const MediaComponent = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-
+    const socket = useSocket(); 
   const getMedia = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -55,28 +58,37 @@ const MediaComponent = () => {
 
 
   const sendMedia = () => {
+    if (!socket) {
+      setMessage("Socket is not connected. Unable to send data.");
+      return;
+    }
+
     if (stream) {
-      // Initialize MediaRecorder with the media stream
       const mediaRecorder = new MediaRecorder(stream, {
         audioBitsPerSecond: 128000,
         videoBitsPerSecond: 2500000,
         mimeType: "video/webm", // Specify the format
       });
 
-      // Save reference to media recorder for further control
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           console.log('Binary Stream Available', event.data);
-          // socket.emit('binarystream', event.data);  // Emit the binary data to the server
+          if (socket.connected) {
+            // Emit the binary data to the server using the socket
+            socket.emit('binarystream', event.data);
+            setMessage("Data sent to server");
+          } else {
+            setMessage("Socket is disconnected. Unable to send data.");
+          }
         }
       };
 
-      mediaRecorder.start(1000);  // Collect data in intervals (e.g., every 1 second)
+      mediaRecorder.start(1000);  // Collect data in intervals (every 1 second)
       setMessage("Recording started and binary stream is being sent");
     } else {
-      setMessage("No media to send");
+      setMessage("No media available to send");
     }
   };
 
